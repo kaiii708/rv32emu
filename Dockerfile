@@ -8,11 +8,11 @@ COPY . .
 
 # generate execution file for rv32emu and rv_histogram
 RUN make
-RUN make tool
+RUN make tool -j"$(nproc)"
 RUN mv ./build/rv32emu ./build/rv32emu-user
 RUN mv ./build/rv_histogram ./build/tmp_rv_histogram
 RUN make distclean
-RUN make ENABLE_SYSTEM=1 INITRD_SIZE=32
+RUN make ENABLE_SYSTEM=1 INITRD_SIZE=32 -j"$(nproc)"
 
 FROM alpine:3.21 AS final
 
