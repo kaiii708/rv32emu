@@ -2,15 +2,17 @@ FROM alpine:3.21 AS base_gcc
 
 RUN apk add --update alpine-sdk git wget sdl2-dev sdl2_mixer-dev dtc
 
+RUN echo "CPU cores available:" && nproc
+
 # copy in the source code
 WORKDIR /home/root/rv32emu
 COPY . .
 
 # generate execution file for rv32emu and rv_histogram
-RUN make
+RUN make -j"$(nproc)"
 RUN make tool -j"$(nproc)"
 RUN mv ./build/rv32emu ./build/rv32emu-user
-RUN mv ./build/rv_histogram ./build/tmp_rv_histogram
+RUN mv ./build/rv_histogram ./build/rv32emu-histogram
 RUN make distclean
 RUN make ENABLE_SYSTEM=1 INITRD_SIZE=32 -j"$(nproc)"
 
@@ -24,7 +26,7 @@ COPY --from=base_gcc /usr/include/SDL2/ /usr/include/SDL2/
 COPY --from=base_gcc /usr/lib/libSDL2* /usr/lib/
 COPY --from=base_gcc /home/root/rv32emu/build/rv32emu-user /home/root/rv32emu/build/rv32emu-user
 COPY --from=base_gcc /home/root/rv32emu/build/rv32emu /home/root/rv32emu/build/rv32emu-system
-COPY --from=base_gcc /home/root/rv32emu/build/tmp_rv_histogram /home/root/rv32emu/build/rv_histogram
+COPY --from=base_gcc /home/root/rv32emu/build/rv32emu-histogram /home/root/rv32emu/rv32emu-histogram
 
 ENV PATH=/home/root/rv32emu/build:$PATH
 
