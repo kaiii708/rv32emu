@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
+#if HAVE_MMAP
+	#include <sys/mman.h>
+#endif
 #include <sys/stat.h>
 
 #if RV32_HAS(SYSTEM_MMIO)
@@ -28,9 +30,11 @@
 #define FILENO(x) fileno(x)
 #else
 #define FILENO(x) _fileno(x)
-#define STDIN_FILENO FILENO(stdin)
-#define STDOUT_FILENO FILENO(stdout)
-#define STDERR_FILENO FILENO(stderr)
+#ifndef STDIN_FILENO
+	#define STDIN_FILENO FILENO(stdin)
+	#define STDOUT_FILENO FILENO(stdout)
+	#define STDERR_FILENO FILENO(stderr)
+#endif
 #endif
 
 #if defined(__EMSCRIPTEN__)
