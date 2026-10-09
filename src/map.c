@@ -8,6 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <malloc.h> /* _aligned_malloc(), _aligned_free() */
+#endif
+
 #include "common.h"
 #include "map.h"
 #include "utils.h"
@@ -236,9 +240,13 @@ static bool grow_chunks(map_t map)
         return false;
     size_t alloc_size = map->node_align + capacity * map->node_stride;
 
+#ifdef _WIN32
+    map_chunk_t *chunk = _aligned_malloc(alloc_size, map->node_align);
+#else
     map_chunk_t *chunk = map->node_align <= _Alignof(max_align_t)
                              ? malloc(alloc_size)
                              : aligned_alloc(map->node_align, alloc_size);
+#endif
     if (!chunk)
         return false;
 
@@ -719,7 +727,11 @@ void map_clear(map_t obj)
     map_chunk_t *chunk = obj->chunks;
     while (chunk) {
         map_chunk_t *next = chunk->next;
+#ifdef _WIN32
+        _aligned_free(chunk);
+#else
         free(chunk);
+#endif
         chunk = next;
     }
     obj->root = obj->first = obj->last = NULL;
